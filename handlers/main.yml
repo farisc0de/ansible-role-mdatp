@@ -1,0 +1,6 @@
+---
+# Handlers for restarting or updating services if needed
+- name: Restart MDATP service
+  ansible.builtin.service:
+    name: mdatp
+    state: restarted

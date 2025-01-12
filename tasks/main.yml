@@ -1,0 +1,12 @@
+---
+# Main entry point for role tasks
+
+- name: Include installation tasks
+  include_tasks: install.yml
+  tags:
+    - installation
+
+- name: Include configuration tasks
+  include_tasks: config.yml
+  tags:
+    - configuration

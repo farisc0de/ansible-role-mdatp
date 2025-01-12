@@ -1,0 +1,23 @@
+---
+# Check if onboarding file exists
+- name: Check if onboarding file exists
+  ansible.builtin.stat:
+    path: "{{ mdatp_onboard_file }}"
+  register: onboarding_status
+
+# Download onboarding package
+- name: Download onboarding package
+  ansible.builtin.get_url:
+    url: "{{ onboarding_package_url }}"
+    dest: "{{ mdatp_dir }}/WindowsDefenderATPOnboardingPackage.zip"
+    mode: "0600"
+  when: onboarding_package_url is defined
+
+# Extract onboarding package to retrieve mdatp_onboard.json
+- name: Extract onboarding package
+  ansible.builtin.unarchive:
+    src: "{{ mdatp_dir }}/WindowsDefenderATPOnboardingPackage.zip"
+    dest: "{{ mdatp_dir }}"
+    remote_src: true
+    creates: "{{ mdatp_onboard_file }}"
+  when: not onboarding_status.stat.exists

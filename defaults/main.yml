@@ -1,2 +1,18 @@
 ---
+# Directory where MDATP will be installed
 mdatp_dir: /etc/opt/microsoft/mdatp
+
+# Microsoft signing key URL
+microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+
+# Package state for installation
+mdatp_package_state: "present"
+
+# Repository states
+mdatp_repo_state: "present"
+
+# Enable automatic updates
+mdatp_enable_updates: true
+
+# Package name
+mdatp_package_name: "mdatp"

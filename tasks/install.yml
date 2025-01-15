@@ -1,57 +1,58 @@
 ---
-# Check and create the directory for MDATP
-- name: Check if MDATP directory exists
-  ansible.builtin.stat:
-    path: "{{ mdatp_dir }}"
-  register: mdatp_dir_status
-
-- name: Create MDATP directory
+- name: Ensure MDATP directory exists
   ansible.builtin.file:
     path: "{{ mdatp_dir }}"
     state: directory
     mode: "0755"
-  when: not mdatp_dir_status.stat.exists
+    owner: root
+    group: root
 
-# Add Microsoft key
-- name: Download Microsoft key
+- name: Download Microsoft signing key
   ansible.builtin.get_url:
     url: "{{ microsoft_key_url }}"
-    dest: /etc/apt/trusted.gpg.d/microsoft.asc
+    dest: "{{ item.dest }}"
     mode: "0644"
-  when: ansible_facts['os_family'] == "Debian"
+    force: true
+  with_items:
+    - { dest: "/etc/apt/trusted.gpg.d/microsoft.asc", when: ansible_os_family == "Debian" }
+    - { dest: "/etc/pki/rpm-gpg/microsoft.asc", when: ansible_os_family == "RedHat" }
+  when: "item.when"
 
 - name: Import Microsoft key for RedHat-based systems
   ansible.builtin.rpm_key:
-    key: "{{ microsoft_key_url }}"
+    key: "/etc/pki/rpm-gpg/microsoft.asc"
     state: present
-  when: ansible_facts['os_family'] in ["RedHat", "CentOS"]
+  when: ansible_os_family == "RedHat"
 
-# Add Microsoft repository dynamically
-- name: Add Microsoft repository for Debian-based systems
+- name: Add Microsoft repository for Ubuntu
   ansible.builtin.apt_repository:
     repo: "{{ ubuntu_repo_template }}"
+    filename: microsoft-prod
+    state: "{{ mdatp_repo_state }}"
     update_cache: true
-    state: present
-  when: ansible_facts['os_family'] == "Debian"
+  when: ansible_distribution == "Ubuntu"
+
+- name: Add Microsoft repository for Debian
+  ansible.builtin.apt_repository:
+    repo: "{{ debian_repo_template }}"
+    filename: microsoft-prod
+    state: "{{ mdatp_repo_state }}"
+    update_cache: true
+  when: ansible_distribution == "Debian"
 
 - name: Add Microsoft repository for RedHat-based systems
   ansible.builtin.yum_repository:
     name: "{{ redhat_repo_template.name }}"
     description: "{{ redhat_repo_template.description }}"
     baseurl: "{{ redhat_repo_template.baseurl }}"
-    gpgcheck: true
-  when: ansible_facts['os_family'] in ["RedHat", "CentOS"]
+    gpgkey: "{{ redhat_repo_template.gpgkey }}"
+    gpgcheck: "{{ redhat_repo_template.gpgcheck }}"
+    enabled: "{{ redhat_repo_template.enabled }}"
+    state: "{{ mdatp_repo_state }}"
+  when: ansible_os_family == "RedHat"
 
-# Install MDATP package
-- name: Install MDATP on Debian-based systems
-  ansible.builtin.apt:
-    name: mdatp
-    state: present
-    update_cache: true
-  when: ansible_facts['os_family'] == "Debian"
-
-- name: Install MDATP on RedHat-based systems
-  ansible.builtin.dnf:
-    name: mdatp
-    state: present
-  when: ansible_facts['os_family'] in ["RedHat", "CentOS"]
+- name: Install MDATP package
+  ansible.builtin.package:
+    name: "{{ mdatp_package_name }}"
+    state: "{{ mdatp_package_state }}"
+    update_cache: "{{ ansible_os_family == 'Debian' }}"

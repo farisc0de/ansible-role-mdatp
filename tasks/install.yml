@@ -7,6 +7,18 @@
     owner: root
     group: root
 
+- name: Ensure GPG key directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  with_items:
+    - { path: "/etc/apt/trusted.gpg.d", when: ansible_os_family == "Debian" }
+    - { path: "/etc/pki/rpm-gpg", when: ansible_os_family == "RedHat" }
+  when: item.when | bool
+
 - name: Download Microsoft signing key
   ansible.builtin.get_url:
     url: "{{ microsoft_key_url }}"
@@ -16,7 +28,7 @@
   with_items:
     - { dest: "/etc/apt/trusted.gpg.d/microsoft.asc", when: ansible_os_family == "Debian" }
     - { dest: "/etc/pki/rpm-gpg/microsoft.asc", when: ansible_os_family == "RedHat" }
-  when: "item.when"
+  when: item.when | bool
 
 - name: Import Microsoft key for RedHat-based systems
   ansible.builtin.rpm_key:

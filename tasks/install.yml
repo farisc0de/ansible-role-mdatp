@@ -128,8 +128,8 @@
 # Package installation
 - name: Install MDATP package
   ansible.builtin.package:
-    name: "{{ mdatp_package.name }}"
-    state: "{{ mdatp_package.state }}"
+    name: mdatp
+    state: "{{ mdatp_package.state | default('present') }}"
     update_cache: "{{ ansible_os_family == 'Debian' }}"
   register: package_install
   until: package_install is success

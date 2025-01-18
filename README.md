@@ -35,10 +35,31 @@ mdatp_paths:
 
 ### Repository Configuration
 ```yaml
+# General repository settings
 mdatp_repository:
   enabled: true
   state: "present"
   key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+
+# Debian family repository templates
+debian_family:
+  repository:
+    ubuntu:
+      template: >-
+        deb [arch=amd64,arm64]
+        https://packages.microsoft.com/ubuntu/{{ ansible_distribution_version }}/prod
+        {{ ansible_distribution_release }} main
+    debian:
+      template: >-
+        deb [arch=amd64,arm64]
+        https://packages.microsoft.com/debian/{{ ansible_distribution_major_version }}/prod
+        {{ ansible_distribution_release }} main
+
+# RedHat family repository template
+redhat_family:
+  repository:
+    template:
+      name: "microsoft-prod"
 ```
 
 ### Update Settings

@@ -8,7 +8,7 @@
     owner: root
     group: root
   loop:
-    - { path: "{{ mdatp_dir }}" }
+    - { path: "{{ mdatp_paths.install_dir }}" }
     - { path: "/etc/apt/trusted.gpg.d", when: ansible_os_family == 'Debian' }
     - { path: "/etc/pki/rpm-gpg", when: ansible_os_family == 'RedHat' }
   when: "item.when | default(true)"
@@ -18,7 +18,7 @@
 
 - name: Download Microsoft signing key
   ansible.builtin.get_url:
-    url: "{{ microsoft_key_url }}"
+    url: "{{ mdatp_repository.key_url }}"
     dest: "{{ item.dest }}"
     mode: "0644"
     force: true
@@ -39,24 +39,27 @@
   block:
     - name: Add Microsoft repository for Ubuntu
       ansible.builtin.apt_repository:
-        repo: "{{ ubuntu_repo_template }}"
+        repo: "{{ debian_family.repository.ubuntu.template }}"
         filename: microsoft-prod
-        state: "{{ mdatp_repo_state }}"
+        state: "{{ mdatp_repository.state }}"
         update_cache: true
       register: repo_add
       until: repo_add is success
       retries: 3
       delay: 5
+      when: ansible_distribution == "Ubuntu"
+    
     - name: Add Microsoft repository for Debian
       ansible.builtin.apt_repository:
-        repo: "{{ debian_repo_template }}"
+        repo: "{{ debian_family.repository.debian.template }}"
         filename: microsoft-prod
-        state: "{{ mdatp_repo_state }}"
+        state: "{{ mdatp_repository.state }}"
         update_cache: true
       register: repo_add
       until: repo_add is success
       retries: 3
       delay: 5
+      when: ansible_distribution == "Debian"
   when: ansible_os_family == "Debian"
   tags:
     - install
@@ -75,13 +78,13 @@
 
     - name: Add Microsoft repository for RedHat-based systems
       ansible.builtin.yum_repository:
-        name: "{{ redhat_repo_template.name }}"
-        description: "{{ redhat_repo_template.description }}"
-        baseurl: "{{ redhat_repo_template.baseurl }}"
-        gpgkey: "{{ redhat_repo_template.gpgkey }}"
-        gpgcheck: "{{ redhat_repo_template.gpgcheck }}"
-        enabled: "{{ redhat_repo_template.enabled }}"
-        state: "{{ mdatp_repo_state }}"
+        name: "{{ redhat_family.repository.template.name }}"
+        description: "Microsoft Defender for Endpoint"
+        baseurl: "https://packages.microsoft.com/rhel/{{ ansible_distribution_major_version }}/prod/"
+        gpgkey: "{{ mdatp_repository.key_url }}"
+        gpgcheck: true
+        enabled: "{{ mdatp_repository.enabled }}"
+        state: "{{ mdatp_repository.state }}"
       register: repo_add
       until: repo_add is success
       retries: 3
@@ -94,8 +97,8 @@
 # Package installation
 - name: Install MDATP package
   ansible.builtin.package:
-    name: "{{ mdatp_package_name }}"
-    state: "{{ mdatp_package_state }}"
+    name: "{{ mdatp_package.name }}"
+    state: "{{ mdatp_package.state }}"
     update_cache: "{{ ansible_os_family == 'Debian' }}"
   register: package_install
   until: package_install is success
@@ -109,10 +112,10 @@
 # Post-installation configuration
 - name: Configure MDATP service
   ansible.builtin.service:
-    name: "{{ mdatp_service.name }}"
-    enabled: "{{ mdatp_service.enabled }}"
+    name: mdatp
+    enabled: true
     state: started
-  when: mdatp_package_state != 'absent'
+  when: mdatp_package.state != 'absent'
   tags:
     - install
     - service

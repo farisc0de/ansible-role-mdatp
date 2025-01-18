@@ -44,7 +44,7 @@
   block:
     - name: Set real-time protection
       ansible.builtin.command:
-        cmd: mdatp config real-time-protection --value {{ mdatp_security.real_time_protection | bool | ternary('enabled', 'disabled') }}
+        cmd: mdatp config real-time-protection --value enabled
       register: rtp_config
       changed_when: >-
         rtp_config.rc == 0 and
@@ -52,11 +52,13 @@
       failed_when: >-
         rtp_config.rc != 0 and
         'Configuration not updated' not in rtp_config.stdout
-      when: mdatp_security.real_time_protection is defined
+      when: 
+        - mdatp_security.real_time_protection is defined
+        - mdatp_security.real_time_protection | bool
 
     - name: Configure cloud protection
       ansible.builtin.command:
-        cmd: mdatp config cloud-enabled --value {{ mdatp_security.cloud_enabled | bool | ternary('enabled', 'disabled') }}
+        cmd: mdatp config cloud-enabled --value enabled
       register: cloud_config
       changed_when: >-
         cloud_config.rc == 0 and
@@ -64,11 +66,13 @@
       failed_when: >-
         cloud_config.rc != 0 and
         'Configuration not updated' not in cloud_config.stdout
-      when: mdatp_security.cloud_enabled is defined
+      when: 
+        - mdatp_security.cloud_enabled is defined
+        - mdatp_security.cloud_enabled | bool
 
     - name: Configure sample sharing
       ansible.builtin.command:
-        cmd: mdatp config sample-sharing --value {{ mdatp_security.sample_sharing | bool | ternary('enabled', 'disabled') }}
+        cmd: mdatp config sample-sharing --value enabled
       register: sample_config
       changed_when: >-
         sample_config.rc == 0 and
@@ -76,7 +80,9 @@
       failed_when: >-
         sample_config.rc != 0 and
         'Configuration not updated' not in sample_config.stdout
-      when: mdatp_security.sample_sharing is defined
+      when: 
+        - mdatp_security.sample_sharing is defined
+        - mdatp_security.sample_sharing | bool
   when: mdatp_package.state != 'absent'
   tags:
     - configuration

@@ -1,0 +1,12 @@
+{
+    "proxy": {
+        "server": "{{ mdatp_proxy.server }}",
+        "port": {{ mdatp_proxy.port | default(8080) }},
+{% if mdatp_proxy.user is defined and mdatp_proxy.user != '' %}
+        "user": "{{ mdatp_proxy.user }}",
+{% endif %}
+{% if mdatp_proxy.password is defined and mdatp_proxy.password != '' %}
+        "password": "{{ mdatp_proxy.password }}"
+{% endif %}
+    }
+}

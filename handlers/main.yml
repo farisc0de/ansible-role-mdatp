@@ -1,6 +1,8 @@
 ---
-# Handlers for restarting or updating services if needed
-- name: Restart MDATP service
+# Handlers for MDATP service
+
+- name: restart mdatp
   ansible.builtin.service:
-    name: mdatp
+    name: "{{ mdatp_service.name }}"
     state: restarted
+  when: mdatp_package.state != 'absent'

@@ -1,18 +1,45 @@
 ---
-# Directory where MDATP will be installed
-mdatp_dir: /etc/opt/microsoft/mdatp
+# Microsoft Defender for Endpoint (MDATP) Configuration
 
-# Microsoft signing key URL
-microsoft_key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+# Installation settings
+mdatp_package:
+  name: "mdatp"
+  state: "present"  # Options: present, latest, absent
+  version: ""  # Leave empty for latest version
 
-# Package state for installation
-mdatp_package_state: "present"
+# Directory configuration
+mdatp_paths:
+  install_dir: /etc/opt/microsoft/mdatp
+  config_dir: /etc/opt/microsoft/mdatp/conf
 
-# Repository states
-mdatp_repo_state: "present"
+# Repository configuration
+mdatp_repository:
+  enabled: true
+  state: "present"
+  key_url: "https://packages.microsoft.com/keys/microsoft.asc"
+  
+# Update settings
+mdatp_updates:
+  enabled: true
+  frequency: "daily"  # Options: daily, weekly
+  automatic: true
 
-# Enable automatic updates
-mdatp_enable_updates: true
+# Security settings
+mdatp_security:
+  real_time_protection: true
+  cloud_enabled: true
+  sample_sharing: true
 
-# Package name
-mdatp_package_name: "mdatp"
+# Proxy settings (optional)
+mdatp_proxy:
+  enabled: false
+  server: ""
+  port: ""
+  user: ""
+  password: ""
+
+# Onboarding configuration
+mdatp_onboarding:
+  enabled: false  # Set to true when you want to onboard
+  package_url: ""  # URL to your organization's onboarding package
+  validate_cert: true  # Whether to validate SSL certificate when downloading

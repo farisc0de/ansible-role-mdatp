@@ -11,7 +11,7 @@
     - { path: "{{ mdatp_paths.install_dir }}" }
     - { path: "/etc/apt/trusted.gpg.d", when: ansible_os_family == 'Debian' }
     - { path: "/etc/pki/rpm-gpg", when: ansible_os_family == 'RedHat' }
-  when: "item.when | default(true)"
+  when: item.when | default(true)
   tags: 
     - install
     - directories
@@ -22,10 +22,10 @@
     dest: "{{ item.dest }}"
     mode: "0644"
     force: true
-  with_items:
+  loop:
     - { dest: "/etc/apt/trusted.gpg.d/microsoft.asc", when: ansible_os_family == "Debian" }
     - { dest: "/etc/pki/rpm-gpg/microsoft.asc", when: ansible_os_family == "RedHat" }
-  when: item.when | bool
+  when: item.when
   register: key_download
   until: key_download is success
   retries: 3

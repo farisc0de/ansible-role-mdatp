@@ -58,7 +58,7 @@
 
     - name: Configure cloud protection
       ansible.builtin.command:
-        cmd: mdatp config cloud-enabled --value enabled
+        cmd: mdatp config cloud --value enabled
       register: cloud_config
       changed_when: >-
         cloud_config.rc == 0 and
@@ -90,20 +90,20 @@
 
 # Update configuration
 - name: Configure automatic updates
-  block:
-    - name: Set update settings
-      ansible.builtin.command:
-        cmd: mdatp config auto-update --value {{ mdatp_updates.automatic | bool | ternary('enabled', 'disabled') }}
-      register: update_config
-      changed_when: >-
-        update_config.rc == 0 and
-        'Configuration not updated' not in update_config.stdout
-      failed_when: >-
-        update_config.rc != 0 and
-        'Configuration not updated' not in update_config.stdout
+  ansible.builtin.command:
+    cmd: mdatp config automatic-definitions-update --value enabled
+  register: update_config
+  changed_when: >-
+    update_config.rc == 0 and
+    'Configuration not updated' not in update_config.stdout
+  failed_when: >-
+    update_config.rc != 0 and
+    'Configuration not updated' not in update_config.stdout
   when: 
     - mdatp_package.state != 'absent'
+    - mdatp_updates.enabled is defined
     - mdatp_updates.enabled | bool
+    - mdatp_updates.automatic | bool
   tags:
     - configuration
     - updates

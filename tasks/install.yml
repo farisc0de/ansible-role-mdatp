@@ -1,33 +1,64 @@
 ---
 # Pre-installation tasks
-- name: Ensure system directories exist
+- name: Create MDATP install directory
   ansible.builtin.file:
-    path: "{{ item.path }}"
+    path: "{{ mdatp_paths.install_dir }}"
     state: directory
     mode: "0755"
     owner: root
     group: root
-  loop:
-    - { path: "{{ mdatp_paths.install_dir }}" }
-    - { path: "/etc/apt/trusted.gpg.d", when: ansible_os_family == 'Debian' }
-    - { path: "/etc/pki/rpm-gpg", when: ansible_os_family == 'RedHat' }
-  when: item.when | default(true)
   tags: 
     - install
     - directories
 
-- name: Download Microsoft signing key
+- name: Create Debian specific directories
+  ansible.builtin.file:
+    path: "/etc/apt/trusted.gpg.d"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: ansible_os_family == "Debian"
+  tags: 
+    - install
+    - directories
+
+- name: Create RedHat specific directories
+  ansible.builtin.file:
+    path: "/etc/pki/rpm-gpg"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+  when: ansible_os_family == "RedHat"
+  tags: 
+    - install
+    - directories
+
+- name: Download Microsoft signing key for Debian
   ansible.builtin.get_url:
     url: "{{ mdatp_repository.key_url }}"
-    dest: "{{ item.dest }}"
+    dest: "/etc/apt/trusted.gpg.d/microsoft.asc"
     mode: "0644"
     force: true
-  loop:
-    - { dest: "/etc/apt/trusted.gpg.d/microsoft.asc", when: ansible_os_family == "Debian" }
-    - { dest: "/etc/pki/rpm-gpg/microsoft.asc", when: ansible_os_family == "RedHat" }
-  when: item.when
-  register: key_download
-  until: key_download is success
+  when: ansible_os_family == "Debian"
+  register: key_download_debian
+  until: key_download_debian is success
+  retries: 3
+  delay: 5
+  tags:
+    - install
+    - repository
+
+- name: Download Microsoft signing key for RedHat
+  ansible.builtin.get_url:
+    url: "{{ mdatp_repository.key_url }}"
+    dest: "/etc/pki/rpm-gpg/microsoft.asc"
+    mode: "0644"
+    force: true
+  when: ansible_os_family == "RedHat"
+  register: key_download_redhat
+  until: key_download_redhat is success
   retries: 3
   delay: 5
   tags:

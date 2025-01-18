@@ -27,8 +27,8 @@ mdatp_updates:
 # Security settings
 mdatp_security:
   real_time_protection: true
-  cloud_enabled: true
-  sample_sharing: true
+  cloud_enabled: false
+  sample_sharing: false
 
 # Proxy settings (optional)
 mdatp_proxy:
